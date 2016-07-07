@@ -118,3 +118,149 @@ QList<AdapterInfo> AMDOverdrive::adapterInfo() {
 
     return infoList;
 }
+
+bool AMDOverdrive::isAdapterActive(AdapterInfo adapterInfo) {
+    bool isActive = false;
+
+    if(_dll) {
+        ADL(_dll, ADL_ADAPTER_ACTIVE_GET, ADL_Adapter_Active_Get)
+        if(ADL_Adapter_Active_Get) {
+            int adapterActive = 0;
+            int returnCode = ADL_Adapter_Active_Get(adapterInfo.iAdapterIndex, &adapterActive);
+            if(returnCode == ADL_OK) {
+                isActive = adapterActive && adapterInfo.iVendorID == AMDVENDORID;
+            } else {
+                functionCallFailed("ADL_Adapter_Active_Get", returnCode);
+            }
+        } else {
+            functionNotAvailable("ADL_Adapter_Active_Get");
+        }
+    }
+
+    return isActive;
+}
+
+AMDOverdrive::Capabilities AMDOverdrive::capabilities(int adapterIndex) {
+    Capabilities caps;
+
+    if(_dll) {
+        ADL(_dll, ADL_OVERDRIVE_CAPS, ADL_Overdrive_Caps)
+        if(ADL_Overdrive_Caps) {
+            int returnCode = ADL_Overdrive_Caps(adapterIndex, &caps.supported, &caps.enabled, &caps.version);
+            if(returnCode != ADL_OK) {
+                functionCallFailed("ADL_Overdrive_Caps", returnCode);
+            }
+        } else {
+            functionNotAvailable("ADL_Overdrive_Caps");
+        }
+    }
+
+    return caps;
+}
+
+bool AMDOverdrive::isPowerControlSupported5(int adapterIndex) {
+    int isSupported = 0;
+
+    if(_dll) {
+        ADL(_dll, ADL_OVERDRIVE5_POWERCONTROL_CAPS, ADL_Overdrive5_PowerControl_Caps)
+        if(ADL_Overdrive5_PowerControl_Caps) {
+            int returnCode = ADL_Overdrive5_PowerControl_Caps(adapterIndex, &isSupported);
+            if(returnCode != ADL_OK) {
+                functionCallFailed("ADL_Overdrive5_PowerControl_Caps", returnCode);
+            }
+        } else {
+            functionNotAvailable("ADL_Overdrive5_PowerControl_Caps");
+        }
+    }
+
+    return (bool)isSupported;
+}
+
+ADLPowerControlInfo AMDOverdrive::powerControlInfo5(int adapterIndex) {
+    ADLPowerControlInfo info = {0, 0, 0};
+
+    if(_dll) {
+        if(isPowerControlSupported5(adapterIndex)) {
+            ADL(_dll, ADL_OVERDRIVE5_POWERCONTROLINFO_GET, ADL_Overdrive5_PowerControlInfo_Get)
+            if(ADL_Overdrive5_PowerControlInfo_Get) {
+                int returnCode = ADL_Overdrive5_PowerControlInfo_Get(adapterIndex, &info);
+                if(returnCode != ADL_OK) {
+                    functionCallFailed("ADL_Overdrive5_PowerControlInfo_Get", returnCode);
+                }
+            } else {
+                functionNotAvailable("ADL_Overdrive5_PowerControlInfo_Get");
+            }
+        } else {
+            qDebug() << "Cannot retrieve power control info: power control not supported on adapter " << adapterIndex;
+        }
+    }
+
+    return info;
+}
+
+int AMDOverdrive::powerControlGetCurrent5(int adapterIndex) {
+    int powerControlCurrent, powerControlDefault;
+
+    if(_dll) {
+        if(isPowerControlSupported5(adapterIndex)) {
+            ADL(_dll, ADL_OVERDRIVE5_POWERCONTROL_GET, ADL_Overdrive5_PowerControl_Get)
+            if(ADL_Overdrive5_PowerControl_Get) {
+                int returnCode = ADL_Overdrive5_PowerControl_Get(adapterIndex, &powerControlCurrent, &powerControlDefault);
+                if(returnCode != ADL_OK) {
+                    functionCallFailed("ADL_Overdrive5_PowerControl_Get", returnCode);
+                }
+            } else {
+                functionNotAvailable("ADL_Overdrive5_PowerControl_Get");
+            }
+        } else {
+            qDebug() << "Cannot retrieve power control info: power control not supported on adapter " << adapterIndex;
+        }
+    }
+
+    return powerControlCurrent;
+}
+
+int AMDOverdrive::powerControlGetDefault5(int adapterIndex) {
+    int powerControlCurrent, powerControlDefault;
+
+    if(_dll) {
+        if(isPowerControlSupported5(adapterIndex)) {
+            ADL(_dll, ADL_OVERDRIVE5_POWERCONTROL_GET, ADL_Overdrive5_PowerControl_Get)
+            if(ADL_Overdrive5_PowerControl_Get) {
+                int returnCode = ADL_Overdrive5_PowerControl_Get(adapterIndex, &powerControlCurrent, &powerControlDefault);
+                if(returnCode != ADL_OK) {
+                    functionCallFailed("ADL_Overdrive5_PowerControl_Get", returnCode);
+                }
+            } else {
+                functionNotAvailable("ADL_Overdrive5_PowerControl_Get");
+            }
+        } else {
+            qDebug() << "Cannot retrieve power control info: power control not supported on adapter " << adapterIndex;
+        }
+    }
+
+    return powerControlDefault;
+}
+
+bool AMDOverdrive::powerControlSet5(int adapterIndex, int value) {
+    if(_dll) {
+        if(isPowerControlSupported5(adapterIndex)) {
+            ADL(_dll, ADL_OVERDRIVE5_POWERCONTROL_SET, ADL_Overdrive5_PowerControl_Set)
+            if(ADL_Overdrive5_PowerControl_Set) {
+                int returnCode = ADL_Overdrive5_PowerControl_Set(adapterIndex, value);
+                if(returnCode == ADL_OK) {
+                    return true;
+                } else {
+                    functionCallFailed("ADL_Overdrive5_PowerControl_Set", returnCode);
+                }
+            } else {
+                functionNotAvailable("ADL_Overdrive5_PowerControl_Set");
+            }
+        } else {
+            qDebug() << "Cannot set power control value: power control not supported on adapter " << adapterIndex;
+        }
+    }
+    return false;
+}
+
+

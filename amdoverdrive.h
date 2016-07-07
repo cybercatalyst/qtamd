@@ -43,11 +43,24 @@
 
 class AMDOverdrive {
 public:
+    struct Capabilities {
+        int supported;
+        int enabled;
+        int version;
+    };
+
     AMDOverdrive();
 
     int numberOfAdapters();
-
     QList<AdapterInfo> adapterInfo();
+    bool isAdapterActive(AdapterInfo adapterInfo);
+    Capabilities capabilities(int adapterIndex);
+
+    bool isPowerControlSupported5(int adapterIndex);
+    ADLPowerControlInfo powerControlInfo5(int adapterIndex);
+    int powerControlGetCurrent5(int adapterIndex);
+    int powerControlGetDefault5(int adapterIndex);
+    bool powerControlSet5(int adapterIndex, int value);
 
 private:
 #if defined Q_OS_LINUX
