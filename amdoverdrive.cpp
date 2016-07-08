@@ -456,6 +456,18 @@ QList<AMDOverdrive::PerformanceLevelInfo> AMDOverdrive::performanceLevels(int ad
     return levels;
 }
 
+bool AMDOverdrive::setCoreClock(int adapterIndex, int performanceLevel, int clockMHz) {
+    return writePerformanceLevel(adapterIndex, performanceLevel, CoreClock, clockMHz);
+}
+
+bool AMDOverdrive::setMemoryClock(int adapterIndex, int performanceLevel, int clockMHz) {
+    return writePerformanceLevel(adapterIndex, performanceLevel, MemoryClock, clockMHz);
+}
+
+bool AMDOverdrive::setVoltage(int adapterIndex, int performanceLevel, int voltagemV) {
+    return writePerformanceLevel(adapterIndex, performanceLevel, Voltage, voltagemV);
+}
+
 QList<ADLThermalControllerInfo> AMDOverdrive::thermalControllersInfo(int adapterIndex) {
     QList<ADLThermalControllerInfo> info;
 
@@ -541,7 +553,7 @@ bool AMDOverdrive::fanSupportsRpmWrite(ADLFanSpeedInfo fanSpeedInfo) {
     return fanSpeedInfo.iFlags & ADL_DL_FANCTRL_SUPPORTS_RPM_WRITE;
 }
 
-ADLFanSpeedValue AMDOverdrive::fanSpeedValue(int adapterIndex, int thermalControllerIndex, FanSpeedValueType type) {
+int AMDOverdrive::fanSpeedValue(int adapterIndex, int thermalControllerIndex, FanSpeedValueType type) {
     ADLFanSpeedValue fanSpeedValue = {0, 0, 0, 0};
     fanSpeedValue.iSize = sizeof(ADLFanSpeedValue);
     fanSpeedValue.iSpeedType = (type == Rpm) ? ADL_DL_FANCTRL_SPEED_TYPE_RPM : ADL_DL_FANCTRL_SPEED_TYPE_PERCENT;
@@ -558,7 +570,7 @@ ADLFanSpeedValue AMDOverdrive::fanSpeedValue(int adapterIndex, int thermalContro
         }
     }
 
-    return fanSpeedValue;
+    return fanSpeedValue.iFanSpeed;
 }
 
 bool AMDOverdrive::setFanSpeedValue(int adapterIndex, int thermalControllerIndex, FanSpeedValueType type, int value) {
@@ -599,6 +611,66 @@ bool AMDOverdrive::setFanSpeedToDefault(int adapterIndex, int thermalControllerI
             }
         } else {
             functionNotAvailable("ADL_Overdrive5_FanSpeedToDefault_Set");
+        }
+    }
+
+    return success;
+}
+
+bool AMDOverdrive::writePerformanceLevel(int adapterIndex, int performanceLevel, AMDOverdrive::PerformanceLevelField field, int value) {
+    bool success = false;
+    if(_dll) {
+        ADLODParameters parameters = overdriveParameters(adapterIndex);
+        int n = parameters.iNumberOfPerformanceLevels;
+        if(n > 0) {
+            if(performanceLevel >= 0 && performanceLevel < n) {
+                int size = sizeof(ADLODPerformanceLevels) + sizeof(ADLODPerformanceLevel) * (n - 1);
+                void* currentLevelsBuffer = malloc(size);
+                memset(currentLevelsBuffer, 0, size);
+
+                ADLODPerformanceLevels* pCurrentPerformanceLevels = (ADLODPerformanceLevels*)currentLevelsBuffer;
+                pCurrentPerformanceLevels->iSize = size;
+
+                ADL(_dll, ADL_OVERDRIVE5_ODPERFORMANCELEVELS_GET, ADL_Overdrive5_ODPerformanceLevels_Get)
+                if(ADL_Overdrive5_ODPerformanceLevels_Get) {
+                    int returnCodeGet = ADL_Overdrive5_ODPerformanceLevels_Get(adapterIndex, 0, pCurrentPerformanceLevels);
+                    if(returnCodeGet == ADL_OK) {
+                        switch (field) {
+                        case CoreClock:
+                            pCurrentPerformanceLevels->aLevels[performanceLevel].iEngineClock = value * 100;
+                            break;
+                        case MemoryClock:
+                            pCurrentPerformanceLevels->aLevels[performanceLevel].iMemoryClock = value * 100;
+                            break;
+                        case Voltage:
+                            pCurrentPerformanceLevels->aLevels[performanceLevel].iVddc = value;
+                            break;
+                        }
+
+                        ADL(_dll, ADL_OVERDRIVE5_ODPERFORMANCELEVELS_SET, ADL_Overdrive5_ODPerformanceLevels_Set)
+                        if(ADL_Overdrive5_ODPerformanceLevels_Set) {
+                            int returnCodeSet = ADL_Overdrive5_ODPerformanceLevels_Set(adapterIndex, pCurrentPerformanceLevels);
+                            if(returnCodeSet == ADL_OK) {
+                                success = true;
+                            } else {
+                                functionCallFailed("ADL_Overdrive5_ODPerformanceLevels_Set", returnCodeSet);
+                            }
+                        } else {
+                            functionNotAvailable("ADL_Overdrive5_ODPerformanceLevels_Set");
+                        }
+                    } else {
+                        functionCallFailed("ADL_Overdrive5_ODPerformanceLevels_Get", returnCodeGet);
+                    }
+                } else {
+                    functionNotAvailable("ADL_Overdrive5_ODPerformanceLevels_Get");
+                }
+
+                free(currentLevelsBuffer);
+            } else {
+                qDebug() << "Invalid performance level, must be 0 .." << (n - 1);
+            }
+        } else {
+            qDebug() << "No performance levels available.";
         }
     }
 

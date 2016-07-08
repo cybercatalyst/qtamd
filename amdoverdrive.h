@@ -76,7 +76,9 @@ public:
     ADLODParameters overdriveParameters(int adapterIndex);
     ADLPMActivity currentActivity(int adapterIndex);
     QList<PerformanceLevelInfo> performanceLevels(int adapterIndex);
-    // TODO: Set performance level clocks.
+    bool setCoreClock(int adapterIndex, int performanceLevel, int clockMHz);
+    bool setMemoryClock(int adapterIndex, int performanceLevel, int clockMHz);
+    bool setVoltage(int adapterIndex, int performanceLevel, int voltagemV);
 
     // Thermal control
     QList<ADLThermalControllerInfo> thermalControllersInfo(int adapterIndex);
@@ -86,11 +88,19 @@ public:
     bool fanSupportsRpmRead(ADLFanSpeedInfo fanSpeedInfo);
     bool fanSupportsPercentWrite(ADLFanSpeedInfo fanSpeedInfo);
     bool fanSupportsRpmWrite(ADLFanSpeedInfo fanSpeedInfo);
-    ADLFanSpeedValue fanSpeedValue(int adapterIndex, int thermalControllerIndex, FanSpeedValueType type);
+    int fanSpeedValue(int adapterIndex, int thermalControllerIndex, FanSpeedValueType type);
     bool setFanSpeedValue(int adapterIndex, int thermalControllerIndex, FanSpeedValueType type, int value);
     bool setFanSpeedToDefault(int adapterIndex, int thermalControllerIndex);
 
 private:
+    enum PerformanceLevelField {
+        CoreClock,
+        MemoryClock,
+        Voltage
+    };
+
+    bool writePerformanceLevel(int adapterIndex, int performanceLevel, PerformanceLevelField field, int value);
+
 #if defined Q_OS_LINUX
     void *_dll;
 #else
