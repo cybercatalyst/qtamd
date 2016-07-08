@@ -87,7 +87,7 @@ int AMDOverdrive::numberOfAdapters() {
     return -1;
 }
 
-QList<AdapterInfo> AMDOverdrive::adapterInfo() {
+QList<AdapterInfo> AMDOverdrive::adaptersInfo() {
     QList<AdapterInfo> infoList;
 
     if(_dll) {
@@ -117,6 +117,27 @@ QList<AdapterInfo> AMDOverdrive::adapterInfo() {
     }
 
     return infoList;
+}
+
+
+int AMDOverdrive::adapterID(int adapterIndex) {
+    if(!_dll) { return -1; }
+
+    ADL(_dll, ADL_ADAPTER_ID_GET, ADL_Adapter_ID_Get)
+
+    if(ADL_Adapter_ID_Get) {
+        int id, returnCode;
+        returnCode = ADL_Adapter_ID_Get(adapterIndex, &id);
+        if(returnCode == ADL_OK) {
+            return id;
+        } else {
+            functionCallFailed("ADL_Adapter_ID_Get", returnCode);
+        }
+    } else {
+        functionNotAvailable("ADL_Adapter_ID_Get");
+    }
+
+    return -1;
 }
 
 bool AMDOverdrive::isAdapterActive(AdapterInfo adapterInfo) {

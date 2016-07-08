@@ -28,6 +28,7 @@ typedef int ( *ADL_MAIN_CONTROL_DESTROY )();
 typedef int ( *ADL_ADAPTER_NUMBEROFADAPTERS_GET ) ( int* );
 typedef int ( *ADL_ADAPTER_ADAPTERINFO_GET ) ( LPAdapterInfo, int );
 typedef int ( *ADL_ADAPTER_ACTIVE_GET ) ( int, int* );
+typedef int ( *ADL_ADAPTER_ID_GET ) ( int, int* );
 typedef int ( *ADL_OVERDRIVE_CAPS ) (int iAdapterIndex, int *iSupported, int *iEnabled, int *iVersion);
 typedef int ( *ADL_OVERDRIVE5_THERMALDEVICES_ENUM ) (int iAdapterIndex, int iThermalControllerIndex, ADLThermalControllerInfo *lpThermalControllerInfo);
 typedef int ( *ADL_OVERDRIVE5_ODPARAMETERS_GET ) ( int  iAdapterIndex,  ADLODParameters *  lpOdParameters );

@@ -63,8 +63,9 @@ public:
 
     // General parameters
     int numberOfAdapters();
-    QList<AdapterInfo> adapterInfo();
-    bool isAdapterActive(AdapterInfo adapterInfo);
+    QList<AdapterInfo> adaptersInfo();
+    int adapterID(int adapterIndex);
+    bool isAdapterActive(AdapterInfo adaptersInfo);
     Capabilities capabilities(int adapterIndex);
 
     // Clocks and activity
