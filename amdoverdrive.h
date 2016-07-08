@@ -49,18 +49,46 @@ public:
         int version;
     };
 
+    struct PerformanceLevelInfo {
+        ADLODPerformanceLevel stock;
+        ADLODPerformanceLevel current;
+    };
+
+    enum FanSpeedValueType {
+        Rpm,
+        Percent
+    };
+
     AMDOverdrive();
 
+    // General parameters
     int numberOfAdapters();
     QList<AdapterInfo> adapterInfo();
     bool isAdapterActive(AdapterInfo adapterInfo);
     Capabilities capabilities(int adapterIndex);
 
-    bool isPowerControlSupported5(int adapterIndex);
-    ADLPowerControlInfo powerControlInfo5(int adapterIndex);
-    int powerControlGetCurrent5(int adapterIndex);
-    int powerControlGetDefault5(int adapterIndex);
-    bool powerControlSet5(int adapterIndex, int value);
+    // Clocks and activity
+    bool isPowerControlSupported(int adapterIndex);
+    ADLPowerControlInfo powerControlInfo(int adapterIndex);
+    int powerControlGetCurrent(int adapterIndex);
+    int powerControlGetDefault(int adapterIndex);
+    bool powerControlSet(int adapterIndex, int value);
+    ADLODParameters overdriveParameters(int adapterIndex);
+    ADLPMActivity currentActivity(int adapterIndex);
+    QList<PerformanceLevelInfo> performanceLevels(int adapterIndex);
+    // TODO: Set performance level clocks.
+
+    // Thermal control
+    QList<ADLThermalControllerInfo> thermalControllersInfo(int adapterIndex);
+    int temperatureMillidegreesCelsius(int adapterIndex, int thermalControllerIndex);
+    ADLFanSpeedInfo fanSpeedInfo(int adapterIndex, int thermalControllerIndex);
+    bool fanSupportsPercentRead(ADLFanSpeedInfo fanSpeedInfo);
+    bool fanSupportsRpmRead(ADLFanSpeedInfo fanSpeedInfo);
+    bool fanSupportsPercentWrite(ADLFanSpeedInfo fanSpeedInfo);
+    bool fanSupportsRpmWrite(ADLFanSpeedInfo fanSpeedInfo);
+    ADLFanSpeedValue fanSpeedValue(int adapterIndex, int thermalControllerIndex, FanSpeedValueType type);
+    bool setFanSpeedValue(int adapterIndex, int thermalControllerIndex, FanSpeedValueType type, int value);
+    bool setFanSpeedToDefault(int adapterIndex, int thermalControllerIndex);
 
 private:
 #if defined Q_OS_LINUX
