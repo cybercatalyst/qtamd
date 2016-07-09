@@ -179,6 +179,24 @@ AMDOverdrive::Capabilities AMDOverdrive::capabilities(int adapterIndex) {
     return caps;
 }
 
+ADLBiosInfo AMDOverdrive::biosInfo(int adapterIndex) {
+    ADLBiosInfo info;
+
+    if(_dll) {
+        ADL(_dll, ADL_ADAPTER_VIDEOBIOSINFO_GET, ADL_Adapter_VideoBiosInfo_Get)
+        if(ADL_Adapter_VideoBiosInfo_Get) {
+            int returnCode = ADL_Adapter_VideoBiosInfo_Get(adapterIndex, &info);
+            if(returnCode != ADL_OK) {
+                functionCallFailed("ADL_Adapter_VideoBiosInfo_Get", returnCode);
+            }
+        } else {
+            functionNotAvailable("ADL_Adapter_VideoBiosInfo_Get");
+        }
+    }
+
+    return info;
+}
+
 bool AMDOverdrive::isPowerControlSupported(int adapterIndex) {
     int isSupported = 0;
 

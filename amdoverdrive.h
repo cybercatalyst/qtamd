@@ -67,6 +67,7 @@ public:
     int adapterID(int adapterIndex);
     bool isAdapterActive(AdapterInfo adaptersInfo);
     Capabilities capabilities(int adapterIndex);
+    ADLBiosInfo biosInfo(int adapterIndex);
 
     // Clocks and activity
     bool isPowerControlSupported(int adapterIndex);
